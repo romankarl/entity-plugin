@@ -1,0 +1,6 @@
+curl -X POST -H 'Authorization: Basic bmVvNGo6R3JhcGhTZW5zZQ==' http://localhost:7474/db/data/ext/Entity/graphdb/createAllEntities
+
+curl -X POST -H 'Authorization: Basic bmVvNGo6R3JhcGhTZW5zZQ==' http://localhost:7474/db/data/ext/Entity/node/7377991/createEntity
+
+nano /etc/neo4j/logging.properties
+less /var/log/neo4j/neo4j.0.0.log

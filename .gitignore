@@ -1,0 +1,7 @@
+/target/
+
+# IDE settings
+/.project
+/.classpath
+/.settings/
+
