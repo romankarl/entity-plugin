@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.harness.junit.Neo4jRule;
-import org.neo4j.test.Mute;
 import org.neo4j.test.server.HTTP;
 
 import static org.junit.Assert.*;
@@ -19,8 +18,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 public class EntityTest {
-	@Rule
-	public Mute mute = Mute.muteAll();
 
 	@Rule
 	public Neo4jRule neo4j = new Neo4jRule()

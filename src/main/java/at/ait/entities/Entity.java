@@ -58,8 +58,11 @@ public class Entity extends ServerPlugin {
 		Node entity = null;
 		try (Transaction tx = graphDb.beginTx()) {
 			Set<Node> inputAddresses = new HashSet<>();
-			for (Relationship input : transaction.getRelationships(TGRelationshipType.INPUT))
-				inputAddresses.add(input.getStartNode());
+			for (Relationship input : transaction.getRelationships(TGRelationshipType.INPUT)) {
+				Node output = input.getStartNode();
+				for (Relationship uses : output.getRelationships(TGRelationshipType.USES))
+					inputAddresses.add(uses.getEndNode());
+			}
 			if (inputAddresses.size() >= 2) {
 				Set<Node> entities = collectEntities(inputAddresses);
 				Iterable<Node> addresses;
