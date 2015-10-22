@@ -10,7 +10,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.server.plugins.Description;
 import org.neo4j.server.plugins.PluginTarget;
@@ -20,43 +19,30 @@ import org.neo4j.server.plugins.Source;
 public class Entity extends ServerPlugin {
 	
 	private static Logger logger = Logger.getLogger(Entity.class.getName());
-	private static final int BLOCKS_PER_TRANSACTION = 100;
-	private static final String BLOCK_KEY = "block";
 	
-	@Description("Calculate all entity nodes.")
-    @PluginTarget(GraphDatabaseService.class)
-    public String createAllEntities(@Source GraphDatabaseService graphDb) {
-		int blockNumber = 0;
-		boolean nodesLeft = true;
-		while (nodesLeft) {
-			try (Transaction tx = graphDb.beginTx()) {
-				for (int i=0; i < BLOCKS_PER_TRANSACTION && nodesLeft; i++) {
-					ResourceIterator<Node> transactionIterator = graphDb.findNodes(TGLabel.Transaction, BLOCK_KEY, ++blockNumber);
-					if (transactionIterator.hasNext()) {
-						while (transactionIterator.hasNext()) {
-							Node transaction = transactionIterator.next();
-							createEntity(transaction);
-						}
-					} else {
-						nodesLeft = false;
-					}
-				}
-				tx.success();
-			}
-			if (blockNumber % (10 * BLOCKS_PER_TRANSACTION) == 0)
-				logger.info("processed blocks: " + blockNumber);
+	@Description("Create entities for all transactions of a new block.")
+    @PluginTarget(Node.class)
+    public String createEntities(@Source Node block) {
+		GraphDatabaseService graphDb = block.getGraphDatabase();
+		String height;
+		try (Transaction tx = graphDb.beginTx()) {
+			height = block.getProperty("height").toString();
+			logger.fine("create entities for block with height " + height);
+			for (Relationship contains : block.getRelationships(TGRelationshipType.CONTAINS))
+				createEntity(contains.getEndNode());
 		}
-		return "processed blocks: " + blockNumber;
+		
+		return "block with height " + height + " has been processed";
 	}
 	
-	@Description("Create an entity for a new transaction node.")
+	@Description("Create an entity for a new transaction.")
     @PluginTarget(Node.class)
     public Node createEntity(@Source Node transaction) {
-		logger.fine("create entity for node " + transaction.getProperty("txid"));
 		GraphDatabaseService graphDb = transaction.getGraphDatabase();
 		
 		Node entity = null;
 		try (Transaction tx = graphDb.beginTx()) {
+			logger.fine("create entity for transaction " + transaction.getProperty("txid"));
 			Set<Node> inputAddresses = new HashSet<>();
 			for (Relationship input : transaction.getRelationships(TGRelationshipType.INPUT)) {
 				Node output = input.getStartNode();
