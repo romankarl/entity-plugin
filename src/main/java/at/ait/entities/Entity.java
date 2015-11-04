@@ -59,8 +59,9 @@ public class Entity extends ServerPlugin {
 					addresses = inputAddresses;
 					entity = entities.iterator().next();
 				} else {
+					entity = getLargestEntity(entities);
+					entities.remove(entity);
 					addresses = collectAddressesAndDeleteEntities(entities);
-					entity = graphDb.createNode(TGLabel.Entity);
 				}
 				associateWith(addresses, entity);
 			}
@@ -79,6 +80,19 @@ public class Entity extends ServerPlugin {
 			}
 		}
 		return entities;
+	}
+	
+	private Node getLargestEntity(Iterable<Node> entities) {
+		Node largest_entity = null;
+		int max_degree = 0;
+		for (Node entity : entities) {
+			int degree = entity.getDegree();
+			if (degree > max_degree) {
+				max_degree = degree;
+				largest_entity = entity;
+			}
+		}
+		return largest_entity;
 	}
 	
 	private List<Node> collectAddressesAndDeleteEntities(Iterable<Node> entities) {
