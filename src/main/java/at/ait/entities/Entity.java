@@ -30,6 +30,7 @@ public class Entity extends ServerPlugin {
 			logger.fine("create entities for block with height " + height);
 			for (Relationship contains : block.getRelationships(TGRelationshipType.CONTAINS))
 				createEntity(contains.getEndNode());
+			tx.success();
 		}
 		
 		return "block with height " + height + " has been processed";
