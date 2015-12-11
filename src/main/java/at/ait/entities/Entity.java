@@ -256,14 +256,21 @@ public class Entity extends ServerPlugin {
 							return new PathNode(output, currentPath);
 						} else if (outputIterator.hasNext()) {
 							currentPath = outputIterator.next();
-							Relationship io = direction == Direction.OUTGOING ?
-									currentPath.node.getSingleRelationship(TGRelationshipType.INPUT, direction) :
-									currentPath.node.getSingleRelationship(TGRelationshipType.OUTPUT, direction);
-							Node transaction = direction == Direction.OUTGOING ? io.getEndNode() : io.getStartNode();
-							nextOutputIterator = direction == Direction.OUTGOING ?
-									transaction.getRelationships(TGRelationshipType.OUTPUT, direction).iterator() :
-									transaction.getRelationships(TGRelationshipType.INPUT, direction).iterator();
-							return next();
+							TGRelationshipType firstType;
+							TGRelationshipType secondType;
+							if (direction == Direction.OUTGOING) {
+								firstType = TGRelationshipType.INPUT;
+								secondType = TGRelationshipType.OUTPUT;
+							} else {
+								firstType = TGRelationshipType.OUTPUT;
+								secondType = TGRelationshipType.INPUT;
+							}
+							Relationship io = currentPath.node.getSingleRelationship(firstType, direction);
+							if (io != null) {
+								Node transaction = io.getOtherNode(currentPath.node);
+								nextOutputIterator = transaction.getRelationships(secondType, direction).iterator();
+							}
+							return getNext();
 						} else {
 							return null;
 						}
