@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
 public class PathSearch {
+	
+	private static Logger logger = Logger.getLogger(Entity.class.getName());
 	
 	private Map<Node, PathNode> sourceOutputs;
 	private Map<Node, PathNode> targetOutputs;
@@ -29,10 +32,10 @@ public class PathSearch {
 		List<Node> path = null;
 		while (true) {
 			boolean expandLeft = sourceFringe.size() <= targetFringe.size();
-			System.out.println("expand from " + (expandLeft ? "source" : "target"));
+			logger.fine("expand from " + (expandLeft ? "source" : "target"));
 			Map<Node, PathNode> nextFringe = new HashMap<>();
 			for (PathNode output : getNextOutputs(activeFringe(expandLeft).values(), direction(expandLeft))) {
-				System.out.println(String.format("process output %s (id: %s) from %s (id: %s)",
+				logger.fine(String.format("process output %s (id: %s) from %s (id: %s)",
 						output.node.getProperty("txid_n"), output.node.getId(),
 						output.predecessor.node.getProperty("txid_n"), output.predecessor.node.getId()));
 				if (passiveFringe(expandLeft).containsKey(output.node)) {
@@ -41,9 +44,8 @@ public class PathSearch {
 							PathNode.constructPath(output, passivePath) :
 						    PathNode.constructPath(passivePath, output);
 					return path;
-				} else if (activeOutputs(expandLeft).containsKey(output.node)) {
-					System.out.println("Ignore known node");
-				} else {
+				} else if (!activeOutputs(expandLeft).containsKey(output.node)) {
+					logger.fine("add node to known outputs");
 					nextFringe.put(output.node, output);
 					activeOutputs(expandLeft).put(output.node, output);
 				}

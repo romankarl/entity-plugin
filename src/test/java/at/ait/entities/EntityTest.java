@@ -16,7 +16,6 @@ import java.net.URI;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 public class EntityTest {
@@ -33,8 +32,8 @@ public class EntityTest {
 			.append("CREATE (o1:Output {txid_n: \"a1_0\"})-[:USES]->(a1) ")
 			.append("CREATE (o2:Output {txid_n: \"a2_0\"})-[:USES]->(a2) ")
 			.append("CREATE (o3:Output {txid_n: \"a3_0\"})-[:USES]->(a3) ")
-			.append("CREATE (o1)-[:INPUT]->(:Transaction)-[:OUTPUT]->(o2) ")
-			.append("CREATE (o2)-[:INPUT]->(:Transaction)-[:OUTPUT]->(o3) ")
+			.append("CREATE (o1)-[:INPUT]->(:Transaction {txid: \"a2\"})-[:OUTPUT]->(o2) ")
+			.append("CREATE (o2)-[:INPUT]->(:Transaction {txid: \"a3\"})-[:OUTPUT]->(o3) ")
 			.append("CREATE a1-[:BELONGS_TO]->(e:Entity)")
 			.toString();
 	
@@ -48,8 +47,7 @@ public class EntityTest {
 				//entityPlugin.createEntity(graphDb.findNodes(TGLabel.Transaction).next());
 				Node source = graphDb.findNode(TGLabel.Address, "address", "111");
 				Node target = graphDb.findNode(TGLabel.Address, "address", "113");
-				Iterable<Node> path = entityPlugin.findPathWithBidirectionalStrategy(source, target);
-				result = path != null ? path.toString() : "no path";
+				result = entityPlugin.findPathWithBidirectionalStrategy(source, target);
 				tx.success();
 			}
 			return Response.ok(result).build();

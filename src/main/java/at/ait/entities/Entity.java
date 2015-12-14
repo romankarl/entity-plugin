@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -167,7 +169,7 @@ public class Entity extends ServerPlugin {
 	
 	@Description("Find a path between two nodes. Should be fast.")
 	@PluginTarget(Node.class)
-	public Iterable<Node> findPathWithBidirectionalStrategy(@Source Node source,
+	public String findPathWithBidirectionalStrategy(@Source Node source,
 			@Description("The node to find the shortest path to.") @Parameter(name="target") Node target) {
 		List<Node> path;
 		try (Transaction tx = source.getGraphDatabase().beginTx()) {
@@ -175,6 +177,25 @@ public class Entity extends ServerPlugin {
 			path = search.start();
 			tx.success();
 		}
-		return path;
+		return toJson(path);
+	}
+
+	private String toJson(List<Node> path) {
+		JSONArray json = new JSONArray();
+		for (Node output : path) {
+			if (json.length() != 0) {
+				Node transaction = output.getSingleRelationship(TGRelationshipType.OUTPUT, Direction.INCOMING).getStartNode();
+				json.put(transaction.getAllProperties());
+			}
+			JSONObject outputJson = new JSONObject(output.getAllProperties());
+			Iterable<Relationship> rels = output.getRelationships(TGRelationshipType.USES, Direction.OUTGOING);
+			JSONArray addresses = new JSONArray();
+			for (Relationship rel : rels) {
+				addresses.put(rel.getEndNode().getProperty("address"));
+			}
+			outputJson.put("addresses", addresses);
+			json.put(outputJson);
+		}
+		return json.toString();
 	}
 }
