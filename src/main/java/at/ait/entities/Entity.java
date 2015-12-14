@@ -1,11 +1,8 @@
 package at.ait.entities;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -172,119 +169,12 @@ public class Entity extends ServerPlugin {
 	@PluginTarget(Node.class)
 	public Iterable<Node> findPathWithBidirectionalStrategy(@Source Node source,
 			@Description("The node to find the shortest path to.") @Parameter(name="target") Node target) {
-		List<Node> path = null;
+		List<Node> path;
 		try (Transaction tx = source.getGraphDatabase().beginTx()) {
-			Map<Node, PathNode> sourceOutputs = getOutputsOfAddress(source);
-			Map<Node, PathNode> targetOutputs = getOutputsOfAddress(target);
-			while (true) {
-				boolean expandLeft = sourceOutputs.size() <= targetOutputs.size();
-				Map<Node, PathNode> activeOutputs;
-				Map<Node, PathNode> passiveOutputs;
-				Direction direction;
-				if (expandLeft) {
-					activeOutputs = sourceOutputs;
-					passiveOutputs = targetOutputs;
-					direction = Direction.OUTGOING;
-				} else {
-					activeOutputs = targetOutputs;
-					passiveOutputs = sourceOutputs;
-					direction = Direction.INCOMING;
-				}
-				System.out.println("expand from " + (expandLeft ? "source" : "target"));
-				Map<Node, PathNode> nextOutputs = new HashMap<>();
-				for (PathNode output : getNextOutputs(activeOutputs.values(), direction)) {
-					System.out.println(String.format("process output %s (id: %s) from %s (id: %s)",
-							output.node.getProperty("txid_n"), output.node.getId(),
-							output.path.node.getProperty("txid_n"), output.path.node.getId()));
-					if (passiveOutputs.containsKey(output.node)) {
-						PathNode passivePath = passiveOutputs.get(output.node);
-						path = expandLeft ?
-								PathNode.constructPath(output, passivePath) :
-							    PathNode.constructPath(passivePath, output);
-						break;
-					} else {
-						nextOutputs.put(output.node, output);
-					}
-				}
-				if (expandLeft)
-					sourceOutputs = nextOutputs;
-				else
-					targetOutputs = nextOutputs;
-				if (nextOutputs.isEmpty()) {
-					break;
-				}
-			}
+			PathSearch search = new PathSearch(source, target);
+			path = search.start();
 			tx.success();
 		}
 		return path;
 	}
-
-	private Map<Node, PathNode> getOutputsOfAddress(Node address) {
-		HashMap<Node, PathNode> outputs = new HashMap<>();
-		for (Relationship uses : address.getRelationships(TGRelationshipType.USES))
-			outputs.put(uses.getStartNode(), new PathNode(uses.getStartNode()));
-		return outputs;
-	}
-	
-	private Iterable<PathNode> getNextOutputs(final Iterable<PathNode> outputs, final Direction direction) {
-		return new Iterable<PathNode>() {
-
-			@Override
-			public Iterator<PathNode> iterator() {
-				return new Iterator<PathNode>() {
-					
-					private Iterator<PathNode> outputIterator = outputs.iterator();
-					private Iterator<Relationship> nextOutputIterator;
-					private PathNode currentPath;
-					private PathNode buffer;
-					
-					@Override
-					public boolean hasNext() {
-						buffer = buffer != null ? buffer : getNext();
-						return buffer != null;
-					}
-					
-					@Override
-					public PathNode next() {
-						PathNode next = buffer != null ? buffer : getNext();
-						buffer = null;
-						return next;
-					}
-
-					private PathNode getNext() {
-						if (nextOutputIterator != null && nextOutputIterator.hasNext()) {
-							Relationship io = nextOutputIterator.next();
-							Node output = direction == Direction.OUTGOING ? io.getEndNode() : io.getStartNode();
-							return new PathNode(output, currentPath);
-						} else if (outputIterator.hasNext()) {
-							currentPath = outputIterator.next();
-							TGRelationshipType firstType;
-							TGRelationshipType secondType;
-							if (direction == Direction.OUTGOING) {
-								firstType = TGRelationshipType.INPUT;
-								secondType = TGRelationshipType.OUTPUT;
-							} else {
-								firstType = TGRelationshipType.OUTPUT;
-								secondType = TGRelationshipType.INPUT;
-							}
-							Relationship io = currentPath.node.getSingleRelationship(firstType, direction);
-							if (io != null) {
-								Node transaction = io.getOtherNode(currentPath.node);
-								nextOutputIterator = transaction.getRelationships(secondType, direction).iterator();
-							}
-							return getNext();
-						} else {
-							return null;
-						}
-					}
-
-					@Override
-					public void remove() {}					
-				};
-			}
-			
-		};
-		
-	}
-
 }

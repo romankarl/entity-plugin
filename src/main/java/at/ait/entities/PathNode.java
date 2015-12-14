@@ -8,16 +8,16 @@ import org.neo4j.graphdb.Node;
 
 public class PathNode {
 	Node node;
-	PathNode path;
+	PathNode predecessor;
 	
  	public PathNode(Node node) {
 		this.node = node;
-		this.path = null;
+		this.predecessor = null;
 	}
  	
 	public PathNode(Node node, PathNode path) {
 		this.node = node;
-		this.path = path;
+		this.predecessor = path;
 	}
 
 	public List<Node> path() {
@@ -25,7 +25,7 @@ public class PathNode {
 		PathNode step = this;
 		do {
 			nodeList.add(step.node);
-			step = step.path;
+			step = step.predecessor;
 		} while (step != null);
 		return nodeList;
 	}
