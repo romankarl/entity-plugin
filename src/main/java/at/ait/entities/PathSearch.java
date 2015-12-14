@@ -40,7 +40,7 @@ public class PathSearch {
 					path = expandLeft ?
 							PathNode.constructPath(output, passivePath) :
 						    PathNode.constructPath(passivePath, output);
-					break;
+					return path;
 				} else if (activeOutputs(expandLeft).containsKey(output.node)) {
 					System.out.println("Ignore known node");
 				} else {
