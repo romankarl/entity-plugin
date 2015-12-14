@@ -1,5 +1,6 @@
 /target/
 /neo4j-home/
+/dependency-reduced-pom.xml
 
 # IDE settings
 /.project

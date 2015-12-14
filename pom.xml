@@ -19,6 +19,7 @@
       <groupId>org.neo4j</groupId>
       <artifactId>server-api</artifactId>
       <version>${neo4j.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
        <groupId>org.neo4j.app</groupId>
@@ -57,6 +58,20 @@
             <target>1.7</target>
           </configuration>
         </plugin>
+        
+        <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.2</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>
