@@ -1,4 +1,5 @@
 /target/
+/neo4j-home/
 
 # IDE settings
 /.project

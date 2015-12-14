@@ -173,12 +173,11 @@ public class Entity extends ServerPlugin {
 	public Iterable<Node> findPathWithBidirectionalStrategy(@Source Node source,
 			@Description("The node to find the shortest path to.") @Parameter(name="target") Node target) {
 		List<Node> path = null;
-		boolean expandLeft;
 		try (Transaction tx = source.getGraphDatabase().beginTx()) {
 			Map<Node, PathNode> sourceOutputs = getOutputsOfAddress(source);
 			Map<Node, PathNode> targetOutputs = getOutputsOfAddress(target);
 			while (true) {
-				expandLeft = sourceOutputs.size() <= targetOutputs.size();
+				boolean expandLeft = sourceOutputs.size() <= targetOutputs.size();
 				Map<Node, PathNode> activeOutputs;
 				Map<Node, PathNode> passiveOutputs;
 				Direction direction;
@@ -191,14 +190,17 @@ public class Entity extends ServerPlugin {
 					passiveOutputs = sourceOutputs;
 					direction = Direction.INCOMING;
 				}
+				System.out.println("expand from " + (expandLeft ? "source" : "target"));
 				Map<Node, PathNode> nextOutputs = new HashMap<>();
 				for (PathNode output : getNextOutputs(activeOutputs.values(), direction)) {
+					System.out.println(String.format("process output %s (id: %s) from %s (id: %s)",
+							output.node.getProperty("txid_n"), output.node.getId(),
+							output.path.node.getProperty("txid_n"), output.path.node.getId()));
 					if (passiveOutputs.containsKey(output.node)) {
 						PathNode passivePath = passiveOutputs.get(output.node);
-						if (expandLeft)
-							path = PathNode.constructPath(output, passivePath);
-						else
-							path = PathNode.constructPath(passivePath, output);
+						path = expandLeft ?
+								PathNode.constructPath(output, passivePath) :
+							    PathNode.constructPath(passivePath, output);
 						break;
 					} else {
 						nextOutputs.put(output.node, output);
