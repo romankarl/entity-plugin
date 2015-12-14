@@ -171,13 +171,13 @@ public class Entity extends ServerPlugin {
 	@PluginTarget(Node.class)
 	public String findPathWithBidirectionalStrategy(@Source Node source,
 			@Description("The node to find the shortest path to.") @Parameter(name="target") Node target) {
-		List<Node> path;
+		String result;
 		try (Transaction tx = source.getGraphDatabase().beginTx()) {
 			PathSearch search = new PathSearch(source, target);
-			path = search.start();
+			result = toJson(search.start());
 			tx.success();
 		}
-		return toJson(path);
+		return result;
 	}
 
 	private String toJson(List<Node> path) {
