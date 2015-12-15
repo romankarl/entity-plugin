@@ -174,18 +174,19 @@ public class Entity extends ServerPlugin {
 		String result;
 		try (Transaction tx = source.getGraphDatabase().beginTx()) {
 			PathSearch search = new PathSearch(source, target);
-			result = toJson(search.start());
+			List<Node> path = search.start();
+			result = path != null ? toJson(path) : new JSONObject().put("error", "no path exists").toString();
 			tx.success();
 		}
 		return result;
 	}
 
 	private String toJson(List<Node> path) {
-		JSONArray json = new JSONArray();
+		JSONArray pathJson = new JSONArray();
 		for (Node output : path) {
-			if (json.length() != 0) {
+			if (pathJson.length() != 0) {
 				Node transaction = output.getSingleRelationship(TGRelationshipType.OUTPUT, Direction.INCOMING).getStartNode();
-				json.put(transaction.getAllProperties());
+				pathJson.put(transaction.getAllProperties());
 			}
 			JSONObject outputJson = new JSONObject(output.getAllProperties());
 			Iterable<Relationship> rels = output.getRelationships(TGRelationshipType.USES, Direction.OUTGOING);
@@ -194,8 +195,8 @@ public class Entity extends ServerPlugin {
 				addresses.put(rel.getEndNode().getProperty("address"));
 			}
 			outputJson.put("addresses", addresses);
-			json.put(outputJson);
+			pathJson.put(outputJson);
 		}
-		return json.toString();
+		return new JSONObject().put("path", pathJson).toString();
 	}
 }

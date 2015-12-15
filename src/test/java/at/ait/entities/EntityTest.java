@@ -32,6 +32,7 @@ public class EntityTest {
 			.append("CREATE (o1:Output {txid_n: \"a1_0\"})-[:USES]->(a1) ")
 			.append("CREATE (o2:Output {txid_n: \"a2_0\"})-[:USES]->(a2) ")
 			.append("CREATE (o3:Output {txid_n: \"a3_0\"})-[:USES]->(a3) ")
+			.append("CREATE (:Transaction {txid: \"a1\"})-[:OUTPUT]->(o1) ")
 			.append("CREATE (o1)-[:INPUT]->(:Transaction {txid: \"a2\"})-[:OUTPUT]->(o2) ")
 			.append("CREATE (o2)-[:INPUT]->(:Transaction {txid: \"a3\"})-[:OUTPUT]->(o3) ")
 			.append("CREATE a1-[:BELONGS_TO]->(e:Entity)")
