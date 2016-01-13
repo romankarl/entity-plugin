@@ -1,9 +1,6 @@
 package at.ait.entities;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,10 +28,9 @@ public class PathSearch {
 		targetFringe.putAll(targetOutputs);
 	}
 	
-	public Collection<List<Node>> start(boolean multipleResultPaths) {
-		Collection<List<Node>> paths = new ArrayList<>();
-		boolean resultFound = false;
-		while (!resultFound) {
+	public List<Node> start() {
+		List<Node> path = null;
+		while (true) {
 			boolean expandLeft = sourceFringe.size() <= targetFringe.size();
 			logger.fine("expand from " + (expandLeft ? "source" : "target"));
 			Map<Node, PathNode> nextFringe = new HashMap<>();
@@ -44,12 +40,10 @@ public class PathSearch {
 						output.predecessor.node.getProperty("txid_n"), output.predecessor.node.getId()));
 				if (passiveFringe(expandLeft).containsKey(output.node)) {
 					PathNode passivePath = passiveFringe(expandLeft).get(output.node);
-					List<Node> path = expandLeft ?
+					path = expandLeft ?
 							PathNode.constructPath(output, passivePath) :
 						    PathNode.constructPath(passivePath, output);
-					paths.add(path);
-					resultFound = true;
-					if (!multipleResultPaths) break;
+					return path;
 				} else if (!activeOutputs(expandLeft).containsKey(output.node)) {
 					logger.fine("add node to known outputs");
 					nextFringe.put(output.node, output);
@@ -60,9 +54,11 @@ public class PathSearch {
 				sourceFringe = nextFringe;
 			else
 				targetFringe = nextFringe;
-			if (nextFringe.isEmpty()) break;
+			if (nextFringe.isEmpty()) {
+				break;
+			}
 		}
-		return paths;
+		return path;
 	}
 	
 	private Map<Node, PathNode> activeOutputs(boolean expandLeft) {
@@ -97,7 +93,6 @@ public class PathSearch {
 					
 					private Iterator<PathNode> outputIterator = outputs.iterator();
 					private Iterator<Relationship> nextOutputIterator;
-					private HashSet<Node> visitedTransactions = new HashSet<>();
 					private PathNode currentPath;
 					private PathNode buffer;
 					
@@ -133,10 +128,7 @@ public class PathSearch {
 							Relationship io = currentPath.node.getSingleRelationship(firstType, direction);
 							if (io != null) {
 								Node transaction = io.getOtherNode(currentPath.node);
-								if (!visitedTransactions.contains(transaction)) {
-									nextOutputIterator = transaction.getRelationships(secondType, direction).iterator();
-									visitedTransactions.add(transaction);
-								}
+								nextOutputIterator = transaction.getRelationships(secondType, direction).iterator();
 							}
 							return getNext();
 						} else {

@@ -49,7 +49,7 @@ public class EntityTest {
 				//entityPlugin.createEntity(graphDb.findNodes(TGLabel.Transaction).next());
 				Node source = graphDb.findNode(TGLabel.Address, "address", "111");
 				Node target = graphDb.findNode(TGLabel.Address, "address", "113");
-				result = entityPlugin.findPathWithBidirectionalStrategy(source, target, true);
+				result = entityPlugin.findPathWithBidirectionalStrategy(source, target);
 				tx.success();
 			}
 			return Response.ok(result).build();
