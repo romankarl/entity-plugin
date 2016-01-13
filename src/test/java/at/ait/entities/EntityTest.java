@@ -29,12 +29,13 @@ public class EntityTest {
 			.append("CREATE (a1:Address {address: \"111\"}) ")
 			.append("CREATE (a2:Address {address: \"112\"}) ")
 			.append("CREATE (a3:Address {address: \"113\"}) ")
-			.append("CREATE (o1:Output {txid_n: \"a1_0\"})-[:USES]->(a1) ")
-			.append("CREATE (o2:Output {txid_n: \"a2_0\"})-[:USES]->(a2) ")
-			.append("CREATE (o3:Output {txid_n: \"a3_0\"})-[:USES]->(a3) ")
-			.append("CREATE (:Transaction {txid: \"a1\"})-[:OUTPUT]->(o1) ")
-			.append("CREATE (o1)-[:INPUT]->(:Transaction {txid: \"a2\"})-[:OUTPUT]->(o2) ")
-			.append("CREATE (o2)-[:INPUT]->(:Transaction {txid: \"a3\"})-[:OUTPUT]->(o3) ")
+			.append("CREATE (o1:Output {txid_n: \"b1_0\"})-[:USES]->(a1) ")
+			.append("CREATE (o2:Output {txid_n: \"b2_0\"})-[:USES]->(a2) ")
+			.append("CREATE (o3:Output {txid_n: \"b3_0\"})-[:USES]->(a3) ")
+			.append("CREATE (:Transaction {txid: \"b1\"})-[:OUTPUT]->(o1) ")
+			.append("CREATE (o1)-[:INPUT]->(t2:Transaction {txid: \"b2\"})-[:OUTPUT]->(o2) ")
+			.append("CREATE (o2)-[:INPUT]->(t3:Transaction {txid: \"b3\"})-[:OUTPUT]->(o3) ")
+			.append("CREATE (t2)-[:OUTPUT]->(o2b:Output {txid_n: \"b2_1\"})-[:INPUT]->(t3) ")
 			.append("CREATE a1-[:BELONGS_TO]->(e:Entity)")
 			.toString();
 	
@@ -48,7 +49,7 @@ public class EntityTest {
 				//entityPlugin.createEntity(graphDb.findNodes(TGLabel.Transaction).next());
 				Node source = graphDb.findNode(TGLabel.Address, "address", "111");
 				Node target = graphDb.findNode(TGLabel.Address, "address", "113");
-				result = entityPlugin.findPathWithBidirectionalStrategy(source, target);
+				result = entityPlugin.findPathWithBidirectionalStrategy(source, target, true);
 				tx.success();
 			}
 			return Response.ok(result).build();

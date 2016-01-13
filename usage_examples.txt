@@ -2,5 +2,7 @@ curl -X POST -H 'Authorization: Basic bmVvNGo6R3JhcGhTZW5zZQ==' http://localhost
 
 curl -X POST -H 'Authorization: Basic bmVvNGo6R3JhcGhTZW5zZQ==' http://localhost:7474/db/data/ext/Entity/node/7377991/createEntity
 
+curl -X POST -H 'Authorization: Basic bmVvNGo6R3JhcGhTZW5zZQ==' http://localhost:7474/db/data/ext/Entity/node/371768030/findPathWithBidirectionalStrategy -H "Content-Type: application/json" -d '{"target":"http://localhost:7474/db/data/node/439806981"}'
+
 nano /etc/neo4j/logging.properties
 less /var/log/neo4j/neo4j.0.0.log

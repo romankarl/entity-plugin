@@ -1,6 +1,7 @@
 package at.ait.entities;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -170,18 +171,27 @@ public class Entity extends ServerPlugin {
 	@Description("Find a path between two nodes. Should be fast.")
 	@PluginTarget(Node.class)
 	public String findPathWithBidirectionalStrategy(@Source Node source,
-			@Description("The node to find the shortest path to.") @Parameter(name="target") Node target) {
+			@Description("The node to find the shortest path to.") @Parameter(name="target") Node target,
+			@Description("Continue after one path is found.") @Parameter(name="multipleResultPaths") boolean multipleResultPaths) {
 		String result;
 		try (Transaction tx = source.getGraphDatabase().beginTx()) {
 			PathSearch search = new PathSearch(source, target);
-			List<Node> path = search.start();
-			result = path != null ? toJson(path) : new JSONObject().put("error", "no path exists").toString();
+			Collection<List<Node>> paths = search.start(multipleResultPaths);
+			result = paths.isEmpty() ? new JSONObject().put("error", "no path exists").toString() : toJson(paths).toString();
 			tx.success();
 		}
 		return result;
 	}
 
-	private String toJson(List<Node> path) {
+	private JSONObject toJson(Collection<List<Node>> paths) {
+		JSONArray pathsJson = new JSONArray();
+		for (List<Node> path : paths) {
+			pathsJson.put(toJson(path));
+		}
+		return new JSONObject().put("paths", pathsJson);
+	}
+
+	private JSONArray toJson(List<Node> path) {
 		JSONArray pathJson = new JSONArray();
 		for (Node output : path) {
 			if (pathJson.length() != 0) {
@@ -197,6 +207,6 @@ public class Entity extends ServerPlugin {
 			outputJson.put("addresses", addresses);
 			pathJson.put(outputJson);
 		}
-		return new JSONObject().put("path", pathJson).toString();
+		return pathJson;
 	}
 }
