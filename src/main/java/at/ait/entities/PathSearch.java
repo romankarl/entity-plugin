@@ -3,6 +3,7 @@ package at.ait.entities;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -96,6 +97,7 @@ public class PathSearch {
 					
 					private Iterator<PathNode> outputIterator = outputs.iterator();
 					private Iterator<Relationship> nextOutputIterator;
+					private HashSet<Node> visitedTransactions = new HashSet<>();
 					private PathNode currentPath;
 					private PathNode buffer;
 					
@@ -131,7 +133,10 @@ public class PathSearch {
 							Relationship io = currentPath.node.getSingleRelationship(firstType, direction);
 							if (io != null) {
 								Node transaction = io.getOtherNode(currentPath.node);
-								nextOutputIterator = transaction.getRelationships(secondType, direction).iterator();
+								if (!visitedTransactions.contains(transaction)) {
+									nextOutputIterator = transaction.getRelationships(secondType, direction).iterator();
+									visitedTransactions.add(transaction);
+								}
 							}
 							return getNext();
 						} else {
